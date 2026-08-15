@@ -4,6 +4,9 @@
   "functions": {
     "api/gemini.js": {
       "maxDuration": 30
+    },
+    "api/elevenlabs.js": {
+      "maxDuration": 30
     }
   }
 }

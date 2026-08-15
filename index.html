@@ -4,143 +4,113 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Fetch — Your AI Dog Companion 🐕</title>
-<meta name="description" content="Point your camera at any pup. Fetch is an AI dog companion powered by Google Gemini: identify breeds and get instant, friendly dog-care advice." />
+<meta name="description" content="Scan any dog, chat with a breed-aware AI companion, get a personalized care plan, and turn your pup's photo into a narrated AI storybook. Powered by Google Gemini + ElevenLabs." />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
-    --bg: #fdf6ec;
-    --bg-card: #ffffff;
-    --ink: #2b2118;
-    --ink-soft: #6b5d4f;
-    --brand: #e8873a;
-    --brand-deep: #c9631a;
-    --accent: #3a6ea5;
-    --line: #ede2d3;
-    --good: #4c9a5a;
-    --shadow: 0 10px 30px rgba(80, 50, 20, 0.10);
-    --radius: 18px;
+    --bg: #fdf6ec; --bg-card: #ffffff; --ink: #2b2118; --ink-soft: #6b5d4f;
+    --brand: #e8873a; --brand-deep: #c9631a; --accent: #3a6ea5; --line: #ede2d3;
+    --good: #4c9a5a; --shadow: 0 10px 30px rgba(80,50,20,.10); --radius: 18px;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1c1712;
-      --bg-card: #272019;
-      --ink: #f3e9dc;
-      --ink-soft: #b7a793;
-      --line: #3a2f24;
-      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    }
+    :root { --bg:#1c1712; --bg-card:#272019; --ink:#f3e9dc; --ink-soft:#b7a793;
+      --line:#3a2f24; --shadow:0 10px 30px rgba(0,0,0,.35); }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
-  header {
-    text-align: center;
-    padding: 34px 20px 10px;
-  }
-  .logo {
-    font-size: 2.1rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin: 0;
-  }
+  body { background: var(--bg); color: var(--ink); line-height: 1.55; -webkit-font-smoothing: antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  header { text-align: center; padding: 30px 20px 6px; }
+  .logo { font-size: 2.1rem; font-weight: 800; letter-spacing: -.02em; margin: 0; }
   .logo span { color: var(--brand); }
   .tagline { color: var(--ink-soft); margin: 4px 0 0; font-size: 1rem; }
   .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 60px; }
-  .tabs {
-    display: flex; gap: 8px; justify-content: center;
-    margin: 22px 0 18px; flex-wrap: wrap;
-  }
-  .tab {
-    border: 1px solid var(--line); background: var(--bg-card);
-    color: var(--ink-soft); padding: 9px 18px; border-radius: 999px;
-    font-size: .95rem; font-weight: 600; cursor: pointer; transition: .15s;
-  }
+  .tabs { display: flex; gap: 8px; justify-content: center; margin: 20px 0 16px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--bg-card); color: var(--ink-soft);
+    padding: 9px 16px; border-radius: 999px; font-size: .92rem; font-weight: 600; cursor: pointer; transition: .15s; }
   .tab:hover { color: var(--ink); }
-  .tab.active {
-    background: var(--brand); border-color: var(--brand);
-    color: #fff; box-shadow: var(--shadow);
-  }
-  .card {
-    background: var(--bg-card); border: 1px solid var(--line);
-    border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 22px; margin-bottom: 18px;
-  }
+  .tab.active { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: var(--shadow); }
+  .card { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 22px; margin-bottom: 18px; }
   .hidden { display: none; }
-  /* Scanner */
-  .drop {
-    border: 2px dashed var(--line); border-radius: var(--radius);
-    padding: 30px 18px; text-align: center; cursor: pointer;
-    transition: .15s; background: transparent;
-  }
+  .drop { border: 2px dashed var(--line); border-radius: var(--radius); padding: 30px 18px;
+    text-align: center; cursor: pointer; transition: .15s; background: transparent; }
   .drop:hover, .drop.drag { border-color: var(--brand); background: rgba(232,135,58,.06); }
   .drop .big { font-size: 2.4rem; }
   .drop p { margin: 8px 0 0; color: var(--ink-soft); }
-  .preview {
-    width: 100%; max-height: 340px; object-fit: contain;
-    border-radius: 14px; margin-top: 14px; display: none;
-  }
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px; justify-content: center;
-    background: var(--brand); color: #fff; border: none;
-    padding: 12px 22px; border-radius: 999px; font-size: 1rem;
-    font-weight: 700; cursor: pointer; transition: .15s; width: 100%;
-    margin-top: 14px;
-  }
+  .preview { width: 100%; max-height: 340px; object-fit: contain; border-radius: 14px; margin-top: 14px; display: none; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; justify-content: center; background: var(--brand);
+    color: #fff; border: none; padding: 12px 22px; border-radius: 999px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: .15s; width: 100%; margin-top: 14px; }
   .btn:hover { background: var(--brand-deep); }
   .btn:disabled { opacity: .55; cursor: default; }
   .btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
-  /* Result */
+  .btn.sec { background: var(--accent); }
+  .btn.sec:hover { filter: brightness(1.08); }
+  .btn.small { width: auto; padding: 9px 16px; font-size: .9rem; margin-top: 0; }
   .breed-name { font-size: 1.5rem; font-weight: 800; margin: 0; }
-  .conf {
-    display: inline-block; background: rgba(76,154,90,.14); color: var(--good);
-    font-weight: 700; font-size: .82rem; padding: 3px 10px; border-radius: 999px;
-    margin-left: 8px; vertical-align: middle;
-  }
+  .conf { display: inline-block; background: rgba(76,154,90,.14); color: var(--good); font-weight: 700;
+    font-size: .82rem; padding: 3px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
   .traits { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
-  .chip {
-    background: var(--bg); border: 1px solid var(--line); color: var(--ink-soft);
-    padding: 6px 12px; border-radius: 999px; font-size: .85rem; font-weight: 600;
-  }
+  .chip { background: var(--bg); border: 1px solid var(--line); color: var(--ink-soft);
+    padding: 6px 12px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
   .chip b { color: var(--ink); }
-  .section-h { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
-    color: var(--brand); font-weight: 700; margin: 18px 0 6px; }
+  .section-h { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--brand);
+    font-weight: 700; margin: 18px 0 6px; }
   .care li { margin-bottom: 6px; }
-  .fun { font-style: italic; color: var(--ink-soft); border-left: 3px solid var(--brand);
-    padding-left: 12px; margin-top: 14px; }
+  .fun { font-style: italic; color: var(--ink-soft); border-left: 3px solid var(--brand); padding-left: 12px; margin-top: 14px; }
   .alt { color: var(--ink-soft); font-size: .9rem; margin-top: 12px; }
-  /* Chat */
-  .chat-log { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px;
-    max-height: 52vh; overflow-y: auto; padding-right: 4px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .row .btn { width: auto; flex: 1 1 auto; margin-top: 0; }
+  /* chat */
+  .chat-log { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; max-height: 52vh;
+    overflow-y: auto; padding-right: 4px; }
   .msg { padding: 11px 15px; border-radius: 16px; max-width: 85%; white-space: pre-wrap; }
   .msg.user { background: var(--brand); color: #fff; align-self: flex-end; border-bottom-right-radius: 5px; }
   .msg.bot { background: var(--bg); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 5px; }
   .msg.bot.think { color: var(--ink-soft); font-style: italic; }
   .chat-form { display: flex; gap: 8px; }
-  .chat-form input {
-    flex: 1; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line);
-    background: var(--bg-card); color: var(--ink); font-size: 1rem;
-  }
+  .chat-form input { flex: 1; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--bg-card); color: var(--ink); font-size: 1rem; }
   .chat-form input:focus { outline: none; border-color: var(--brand); }
-  .chat-form button {
-    background: var(--brand); color: #fff; border: none; border-radius: 999px;
-    width: 48px; font-size: 1.2rem; cursor: pointer;
-  }
+  .chat-form button { background: var(--brand); color: #fff; border: none; border-radius: 999px; width: 48px; font-size: 1.2rem; cursor: pointer; }
   .suggest { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .suggest button {
-    background: transparent; border: 1px solid var(--line); color: var(--ink-soft);
-    padding: 7px 12px; border-radius: 999px; font-size: .85rem; cursor: pointer;
-  }
+  .suggest button { background: transparent; border: 1px solid var(--line); color: var(--ink-soft);
+    padding: 7px 12px; border-radius: 999px; font-size: .85rem; cursor: pointer; }
   .suggest button:hover { border-color: var(--brand); color: var(--brand); }
+  .ctx-banner { font-size: .85rem; background: rgba(232,135,58,.1); border: 1px solid var(--line);
+    color: var(--ink-soft); padding: 8px 12px; border-radius: 12px; margin-bottom: 12px; }
+  .ctx-banner b { color: var(--brand-deep); }
   .err { background: rgba(201,99,26,.1); border: 1px solid var(--brand); color: var(--brand-deep);
     padding: 12px 14px; border-radius: 12px; margin-top: 12px; font-size: .92rem; }
+  .empty { text-align: center; color: var(--ink-soft); padding: 24px 10px; }
+  .empty .big { font-size: 2.2rem; }
   .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4);
     border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
+  .spin.dark { border-color: rgba(120,90,60,.3); border-top-color: var(--brand); }
   @keyframes sp { to { transform: rotate(360deg); } }
+  .name-input { width: 100%; padding: 11px 15px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); font-size: 1rem; margin-top: 4px; }
+  .name-input:focus { outline: none; border-color: var(--brand); }
+  label.fld { font-size: .85rem; color: var(--ink-soft); font-weight: 600; }
+  /* care plan card */
+  .plan-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .plan-head img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; }
+  .plan-sec { border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-top: 12px; background: var(--bg); }
+  .plan-sec h4 { margin: 0 0 6px; font-size: 1rem; }
+  .plan-sec ul { margin: 0; padding-left: 18px; }
+  .plan-sec li { margin-bottom: 5px; }
+  .plan-summary { border-left: 3px solid var(--good); padding-left: 12px; margin-top: 16px; color: var(--ink-soft); }
+  /* storybook */
+  .book { text-align: center; }
+  .book-img { width: 100%; max-height: 300px; object-fit: contain; border-radius: 14px; margin-bottom: 12px;
+    background: var(--bg); }
+  .book-title { font-size: 1.35rem; font-weight: 800; margin: 4px 0 10px; }
+  .book-page-text { font-size: 1.1rem; line-height: 1.7; min-height: 96px; }
+  .book-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+  .book-nav .btn { width: auto; margin-top: 0; }
+  .page-count { color: var(--ink-soft); font-size: .9rem; font-weight: 600; }
+  audio { width: 100%; margin-top: 12px; }
   footer { text-align: center; color: var(--ink-soft); font-size: .82rem; padding: 10px 20px 30px; }
   footer a { color: var(--brand); text-decoration: none; }
   .disclaimer { font-size: .78rem; color: var(--ink-soft); text-align: center; margin-top: 6px; }
@@ -149,16 +119,18 @@
 <body>
 <header>
   <h1 class="logo">🐕 Fetch<span>.</span></h1>
-  <p class="tagline">Your AI dog companion — point your camera at any pup.</p>
+  <p class="tagline">Scan your pup → chat, care plan &amp; a narrated AI storybook.</p>
 </header>
 
 <div class="wrap">
   <div class="tabs">
-    <button class="tab active" data-tab="scan">📸 Breed Scanner</button>
+    <button class="tab active" data-tab="scan">📸 Scan</button>
     <button class="tab" data-tab="chat">💬 Ask Fetch</button>
+    <button class="tab" data-tab="plan">📋 Care Plan</button>
+    <button class="tab" data-tab="story">📖 Storybook</button>
   </div>
 
-  <!-- SCANNER -->
+  <!-- SCAN -->
   <section id="scan" class="card">
     <div class="drop" id="drop">
       <div class="big">🐾</div>
@@ -173,14 +145,10 @@
 
   <!-- CHAT -->
   <section id="chat" class="card hidden">
-    <div class="suggest" id="suggest">
-      <button>Is chocolate really dangerous for dogs?</button>
-      <button>How much exercise does a puppy need?</button>
-      <button>My dog won't stop barking at night</button>
-      <button>Best way to start crate training?</button>
-    </div>
+    <div id="ctxBanner"></div>
+    <div class="suggest" id="suggest"></div>
     <div class="chat-log" id="log">
-      <div class="msg bot">Woof! I'm Fetch 🐕 — ask me anything about dog care, training, breeds, or behaviour. What's on your mind?</div>
+      <div class="msg bot">Woof! I'm Fetch 🐕 — ask me anything about dog care, training, breeds, or behaviour. Scan a dog first and I'll tailor my answers to your pup!</div>
     </div>
     <form class="chat-form" id="chatForm">
       <input id="chatInput" type="text" placeholder="Ask about your dog…" autocomplete="off" />
@@ -188,152 +156,350 @@
     </form>
     <p class="disclaimer">Fetch offers general guidance, not veterinary diagnosis. For emergencies, call your vet.</p>
   </section>
+
+  <!-- CARE PLAN -->
+  <section id="plan" class="card hidden">
+    <div id="planEmpty" class="empty">
+      <div class="big">📋</div>
+      <p><b>No dog scanned yet.</b><br>Scan a dog on the 📸 tab, then build a personalized care plan here.</p>
+    </div>
+    <div id="planStart" class="hidden">
+      <label class="fld" for="dogName">Your dog's name (optional)</label>
+      <input class="name-input" id="dogName" type="text" placeholder="e.g. Bruno" />
+      <button class="btn" id="planBtn">Build care plan 🦴</button>
+    </div>
+    <div id="planErr"></div>
+    <div id="planResult"></div>
+  </section>
+
+  <!-- STORYBOOK -->
+  <section id="story" class="card hidden">
+    <div id="storyEmpty" class="empty">
+      <div class="big">📖</div>
+      <p><b>No dog scanned yet.</b><br>Scan a dog on the 📸 tab, then create a narrated storybook starring your pup.</p>
+    </div>
+    <div id="storyStart" class="hidden">
+      <label class="fld" for="storyName">Your dog's name (optional)</label>
+      <input class="name-input" id="storyName" type="text" placeholder="e.g. Bruno" />
+      <button class="btn sec" id="storyBtn">Create storybook 📖✨</button>
+      <p class="disclaimer">Generates a short story with Google Gemini, narrated aloud by ElevenLabs.</p>
+    </div>
+    <div id="storyErr"></div>
+    <div id="storyView" class="hidden book"></div>
+  </section>
 </div>
 
 <footer>
-  Built with 🧡 for the DEV Dog Days Challenge · Powered by <a href="https://ai.google.dev/" target="_blank" rel="noopener">Google Gemini</a>
+  Built with 🧡 for the DEV Dog Days Challenge · Powered by <a href="https://ai.google.dev/" target="_blank" rel="noopener">Google Gemini</a> + <a href="https://elevenlabs.io/" target="_blank" rel="noopener">ElevenLabs</a>
 </footer>
+
+<audio id="player" preload="none"></audio>
 
 <script>
 const API = "/api/gemini";
+const TTS = "/api/elevenlabs";
 
-/* ---------- Tabs ---------- */
-document.querySelectorAll(".tab").forEach(t => {
-  t.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-    t.classList.add("active");
-    const id = t.dataset.tab;
-    document.getElementById("scan").classList.toggle("hidden", id !== "scan");
-    document.getElementById("chat").classList.toggle("hidden", id !== "chat");
-  });
-});
+/* ---------- shared state ---------- */
+const state = {
+  profile: null,      // scanned breed profile object
+  imageData: null,    // base64 (no prefix)
+  mimeType: null,
+  dataUrl: null,      // full data URL for display
+};
 
-/* ---------- Scanner ---------- */
-const drop = document.getElementById("drop");
-const fileInput = document.getElementById("file");
-const preview = document.getElementById("preview");
-const scanBtn = document.getElementById("scanBtn");
-const resultEl = document.getElementById("result");
-const scanErr = document.getElementById("scanErr");
-let imageData = null; // base64 (no prefix)
-let mimeType = null;
+function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
-drop.addEventListener("click", () => fileInput.click());
-["dragover","dragenter"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("drag"); }));
-["dragleave","drop"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("drag"); }));
-drop.addEventListener("drop", ev => { if (ev.dataTransfer.files[0]) handleFile(ev.dataTransfer.files[0]); });
-fileInput.addEventListener("change", () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+/* ---------- tabs ---------- */
+function showTab(id){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active", x.dataset.tab===id));
+  ["scan","chat","plan","story"].forEach(s=>document.getElementById(s).classList.toggle("hidden", s!==id));
+  if(id==="plan") refreshPlanTab();
+  if(id==="story") refreshStoryTab();
+  if(id==="chat") refreshChatContext();
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>showTab(t.dataset.tab)));
 
-function handleFile(file) {
-  if (!file.type.startsWith("image/")) { showScanErr("Please pick an image file."); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    const dataUrl = e.target.result;
-    preview.src = dataUrl;
-    preview.style.display = "block";
-    imageData = dataUrl.split(",")[1];
-    mimeType = file.type;
-    scanBtn.disabled = false;
-    resultEl.innerHTML = "";
-    scanErr.innerHTML = "";
+/* ---------- scanner ---------- */
+const drop=document.getElementById("drop"), fileInput=document.getElementById("file"),
+  preview=document.getElementById("preview"), scanBtn=document.getElementById("scanBtn"),
+  resultEl=document.getElementById("result"), scanErr=document.getElementById("scanErr");
+
+drop.addEventListener("click",()=>fileInput.click());
+["dragover","dragenter"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add("drag");}));
+["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove("drag");}));
+drop.addEventListener("drop",ev=>{ if(ev.dataTransfer.files[0]) handleFile(ev.dataTransfer.files[0]); });
+fileInput.addEventListener("change",()=>{ if(fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+function handleFile(file){
+  if(!file.type.startsWith("image/")){ scanErr.innerHTML='<div class="err">Please pick an image file.</div>'; return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    state.dataUrl=e.target.result;
+    preview.src=state.dataUrl; preview.style.display="block";
+    state.imageData=state.dataUrl.split(",")[1]; state.mimeType=file.type;
+    scanBtn.disabled=false; resultEl.innerHTML=""; scanErr.innerHTML="";
   };
   reader.readAsDataURL(file);
 }
 
-function showScanErr(m) { scanErr.innerHTML = `<div class="err">${m}</div>`; }
-
-scanBtn.addEventListener("click", async () => {
-  if (!imageData) return;
-  scanBtn.disabled = true;
-  scanBtn.innerHTML = '<span class="spin"></span> Sniffing…';
-  scanErr.innerHTML = "";
-  resultEl.innerHTML = "";
-  try {
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "identify", imageData, mimeType })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Something went wrong.");
+scanBtn.addEventListener("click",async()=>{
+  if(!state.imageData) return;
+  scanBtn.disabled=true; scanBtn.innerHTML='<span class="spin"></span> Sniffing…';
+  scanErr.innerHTML=""; resultEl.innerHTML="";
+  try{
+    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({mode:"identify",imageData:state.imageData,mimeType:state.mimeType})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||"Something went wrong.");
+    if(data.is_dog===false){
+      resultEl.innerHTML='<div class="err">Hmm, I don\'t see a dog in that photo 🐶 Try another shot!</div>';
+      state.profile=null; return;
+    }
+    state.profile=data;
     renderResult(data);
-  } catch (err) {
-    showScanErr("🐾 " + err.message);
-  } finally {
-    scanBtn.disabled = false;
-    scanBtn.innerHTML = "Identify this good boy 🔍";
-  }
+  }catch(err){ scanErr.innerHTML='<div class="err">🐾 '+esc(err.message)+'</div>'; }
+  finally{ scanBtn.disabled=false; scanBtn.innerHTML="Identify this good boy 🔍"; }
 });
 
-function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])); }
-
-function renderResult(d) {
-  if (d.is_dog === false) {
-    resultEl.innerHTML = `<div class="err">Hmm, I don't see a dog in that photo 🐶 Try another shot!</div>`;
-    return;
-  }
-  const traits = [];
-  if (d.size) traits.push(`<span class="chip"><b>Size:</b> ${esc(d.size)}</span>`);
-  if (d.energy) traits.push(`<span class="chip"><b>Energy:</b> ${esc(d.energy)}</span>`);
-  if (d.good_with_kids) traits.push(`<span class="chip"><b>Kids:</b> ${esc(d.good_with_kids)}</span>`);
-  if (d.lifespan) traits.push(`<span class="chip"><b>Lifespan:</b> ${esc(d.lifespan)}</span>`);
-  const care = (d.care_tips || []).map(t => `<li>${esc(t)}</li>`).join("");
-  const alts = (d.also_possible && d.also_possible.length)
-    ? `<p class="alt">Also possibly: ${d.also_possible.map(esc).join(", ")}</p>` : "";
-  const conf = d.confidence ? `<span class="conf">${esc(d.confidence)}% match</span>` : "";
-  resultEl.innerHTML = `
+function renderResult(d){
+  const traits=[];
+  if(d.size) traits.push(`<span class="chip"><b>Size:</b> ${esc(d.size)}</span>`);
+  if(d.energy) traits.push(`<span class="chip"><b>Energy:</b> ${esc(d.energy)}</span>`);
+  if(d.good_with_kids) traits.push(`<span class="chip"><b>Kids:</b> ${esc(d.good_with_kids)}</span>`);
+  if(d.lifespan) traits.push(`<span class="chip"><b>Lifespan:</b> ${esc(d.lifespan)}</span>`);
+  const care=(d.care_tips||[]).map(t=>`<li>${esc(t)}</li>`).join("");
+  const alts=(d.also_possible&&d.also_possible.length)?`<p class="alt">Also possibly: ${d.also_possible.map(esc).join(", ")}</p>`:"";
+  const conf=d.confidence?`<span class="conf">${esc(d.confidence)}% match</span>`:"";
+  resultEl.innerHTML=`
     <div style="margin-top:20px">
-      <h2 class="breed-name">${esc(d.breed || "Mixed breed")} ${conf}</h2>
-      ${d.temperament ? `<p style="margin:6px 0 0;color:var(--ink-soft)">${esc(d.temperament)}</p>` : ""}
+      <h2 class="breed-name">${esc(d.breed||"Mixed breed")} ${conf}</h2>
+      ${d.temperament?`<p style="margin:6px 0 0;color:var(--ink-soft)">${esc(d.temperament)}</p>`:""}
       <div class="traits">${traits.join("")}</div>
-      ${care ? `<div class="section-h">Care tips</div><ul class="care">${care}</ul>` : ""}
-      ${d.fun_fact ? `<p class="fun">🦴 ${esc(d.fun_fact)}</p>` : ""}
+      ${care?`<div class="section-h">Care tips</div><ul class="care">${care}</ul>`:""}
+      ${d.fun_fact?`<p class="fun">🦴 ${esc(d.fun_fact)}</p>`:""}
       ${alts}
+      <div class="row">
+        <button class="btn" id="toChat">💬 Ask about my ${esc(d.breed||"dog")}</button>
+        <button class="btn sec" id="toPlan">📋 Care plan</button>
+        <button class="btn ghost" id="toStory">📖 Storybook</button>
+      </div>
     </div>`;
+  document.getElementById("toChat").onclick=()=>showTab("chat");
+  document.getElementById("toPlan").onclick=()=>showTab("plan");
+  document.getElementById("toStory").onclick=()=>showTab("story");
 }
 
-/* ---------- Chat ---------- */
-const log = document.getElementById("log");
-const chatForm = document.getElementById("chatForm");
-const chatInput = document.getElementById("chatInput");
-const history = [];
+/* ---------- chat ---------- */
+const log=document.getElementById("log"), chatForm=document.getElementById("chatForm"),
+  chatInput=document.getElementById("chatInput"), suggestEl=document.getElementById("suggest"),
+  ctxBanner=document.getElementById("ctxBanner");
+const history=[];
 
-document.getElementById("suggest").addEventListener("click", e => {
-  if (e.target.tagName === "BUTTON") { chatInput.value = e.target.textContent; sendChat(); }
+function breedQuestions(breed){
+  const b=breed||"dog";
+  return [
+    `How should I groom a ${b}?`,
+    `What's the best diet for a ${b}?`,
+    `How much exercise does a ${b} need?`,
+    `Ideal home environment for a ${b}?`,
+    `Training tips for a ${b}`,
+    `Common health issues in ${b}s?`,
+  ];
+}
+const genericQuestions=[
+  "Is chocolate really dangerous for dogs?",
+  "How much exercise does a puppy need?",
+  "My dog won't stop barking at night",
+  "Best way to start crate training?",
+];
+
+function refreshChatContext(){
+  const qs=state.profile?breedQuestions(state.profile.breed):genericQuestions;
+  suggestEl.innerHTML=qs.map(q=>`<button>${esc(q)}</button>`).join("");
+  ctxBanner.innerHTML=state.profile
+    ? `<div class="ctx-banner">🐶 Personalized for your <b>${esc(state.profile.breed||"dog")}</b>. Ask away!</div>`
+    : "";
+}
+suggestEl.addEventListener("click",e=>{ if(e.target.tagName==="BUTTON"){ chatInput.value=e.target.textContent; sendChat(); }});
+chatForm.addEventListener("submit",e=>{ e.preventDefault(); sendChat(); });
+
+function addMsg(text,who,think){
+  const div=document.createElement("div");
+  div.className="msg "+who+(think?" think":"");
+  div.textContent=text; log.appendChild(div); log.scrollTop=log.scrollHeight; return div;
+}
+async function sendChat(){
+  const q=chatInput.value.trim(); if(!q) return;
+  chatInput.value=""; addMsg(q,"user"); history.push({role:"user",text:q});
+  const thinking=addMsg("Fetch is thinking…","bot",true);
+  try{
+    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({mode:"chat",message:q,history:history.slice(-10),dogContext:state.profile})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||"Something went wrong.");
+    thinking.remove(); addMsg(data.reply,"bot"); history.push({role:"model",text:data.reply});
+  }catch(err){ thinking.remove(); addMsg("🐾 "+err.message,"bot"); }
+}
+
+/* ---------- care plan ---------- */
+const planEmpty=document.getElementById("planEmpty"), planStart=document.getElementById("planStart"),
+  planBtn=document.getElementById("planBtn"), planResult=document.getElementById("planResult"),
+  planErr=document.getElementById("planErr");
+let lastPlan=null;
+
+function refreshPlanTab(){
+  const has=!!state.profile;
+  planEmpty.classList.toggle("hidden",has);
+  planStart.classList.toggle("hidden",!has);
+}
+planBtn.addEventListener("click",async()=>{
+  if(!state.profile) return;
+  const name=document.getElementById("dogName").value.trim();
+  planBtn.disabled=true; planBtn.innerHTML='<span class="spin"></span> Building plan…';
+  planErr.innerHTML=""; planResult.innerHTML="";
+  try{
+    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({mode:"careplan",profile:state.profile,dogName:name})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||"Something went wrong.");
+    lastPlan=data; renderPlan(data);
+  }catch(err){ planErr.innerHTML='<div class="err">🐾 '+esc(err.message)+'</div>'; }
+  finally{ planBtn.disabled=false; planBtn.innerHTML="Build care plan 🦴"; }
 });
-chatForm.addEventListener("submit", e => { e.preventDefault(); sendChat(); });
 
-function addMsg(text, who, think) {
-  const div = document.createElement("div");
-  div.className = "msg " + who + (think ? " think" : "");
-  div.textContent = text;
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-  return div;
+function renderPlan(d){
+  const sections=(d.sections||[]).map(s=>`
+    <div class="plan-sec">
+      <h4>${esc(s.icon||"🐾")} ${esc(s.title)}</h4>
+      <ul>${(s.tips||[]).map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+    </div>`).join("");
+  const img=state.dataUrl?`<img src="${state.dataUrl}" alt="dog" />`:"";
+  planResult.innerHTML=`
+    <div id="planCard">
+      <div class="plan-head">
+        ${img}
+        <div>
+          <h3 style="margin:0">${esc(d.dog_name||d.breed||"Your dog")}'s Care Plan</h3>
+          <p style="margin:2px 0 0;color:var(--ink-soft);font-size:.9rem">${esc(d.breed||"")}</p>
+        </div>
+      </div>
+      ${sections}
+      ${d.summary?`<p class="plan-summary">🦴 ${esc(d.summary)}</p>`:""}
+    </div>
+    <div class="row">
+      <button class="btn" id="dlPdf">⬇️ Download PDF</button>
+      <button class="btn ghost" id="printPlan">🖨️ Print</button>
+    </div>`;
+  document.getElementById("dlPdf").onclick=()=>downloadPlanPdf(d);
+  document.getElementById("printPlan").onclick=()=>printPlan(d);
 }
 
-async function sendChat() {
-  const q = chatInput.value.trim();
-  if (!q) return;
-  chatInput.value = "";
-  addMsg(q, "user");
-  history.push({ role: "user", text: q });
-  const thinking = addMsg("Fetch is thinking…", "bot", true);
-  try {
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "chat", message: q, history: history.slice(-10) })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Something went wrong.");
-    thinking.remove();
-    addMsg(data.reply, "bot");
-    history.push({ role: "model", text: data.reply });
-  } catch (err) {
-    thinking.remove();
-    addMsg("🐾 " + err.message, "bot");
-  }
+function planLines(d){
+  const lines=[];
+  lines.push([`${d.dog_name||d.breed||"Your dog"}'s Care Plan`,"H1"]);
+  if(d.breed) lines.push([d.breed,"SUB"]);
+  (d.sections||[]).forEach(s=>{
+    lines.push([`${s.title}`,"H2"]);
+    (s.tips||[]).forEach(t=>lines.push(["• "+t,"P"]));
+  });
+  if(d.summary){ lines.push(["Summary","H2"]); lines.push([d.summary,"P"]); }
+  lines.push(["Generated by Fetch 🐕 — general guidance, not veterinary advice.","FOOT"]);
+  return lines;
+}
+function downloadPlanPdf(d){
+  const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:"pt",format:"a4"});
+  const M=48, W=595-M*2; let y=64;
+  planLines(d).forEach(([text,kind])=>{
+    if(kind==="H1"){ doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(201,99,26); }
+    else if(kind==="SUB"){ doc.setFont("helvetica","normal"); doc.setFontSize(12); doc.setTextColor(120,110,95); }
+    else if(kind==="H2"){ doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(40,33,24); y+=8; }
+    else if(kind==="FOOT"){ doc.setFont("helvetica","italic"); doc.setFontSize(9); doc.setTextColor(150,140,125); y+=12; }
+    else { doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(40,33,24); }
+    const wrapped=doc.splitTextToSize(text,W);
+    wrapped.forEach(line=>{ if(y>800){ doc.addPage(); y=64; } doc.text(line,M,y); y+=(kind==="H1"?26:kind==="H2"?18:15); });
+  });
+  const fn=((d.dog_name||d.breed||"dog").replace(/[^a-z0-9]+/gi,"_"))+"_care_plan.pdf";
+  doc.save(fn);
+}
+function printPlan(d){
+  const w=window.open("","_blank");
+  const secs=(d.sections||[]).map(s=>`<h3>${esc(s.icon||"")} ${esc(s.title)}</h3><ul>${(s.tips||[]).map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`).join("");
+  w.document.write(`<html><head><title>${esc(d.dog_name||d.breed||"Dog")} Care Plan</title>
+    <style>body{font-family:Arial,sans-serif;max-width:640px;margin:32px auto;color:#2b2118;padding:0 16px}
+    h1{color:#c9631a} h3{margin:18px 0 4px} li{margin:4px 0} .s{border-left:3px solid #4c9a5a;padding-left:12px;color:#555}</style>
+    </head><body><h1>${esc(d.dog_name||d.breed||"Your dog")}'s Care Plan</h1><p>${esc(d.breed||"")}</p>
+    ${secs}${d.summary?`<p class="s">${esc(d.summary)}</p>`:""}
+    <p style="color:#888;font-size:12px;margin-top:24px">Generated by Fetch 🐕 — general guidance, not veterinary advice.</p>
+    </body></html>`);
+  w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
+}
+
+/* ---------- storybook ---------- */
+const storyEmpty=document.getElementById("storyEmpty"), storyStart=document.getElementById("storyStart"),
+  storyBtn=document.getElementById("storyBtn"), storyView=document.getElementById("storyView"),
+  storyErr=document.getElementById("storyErr"), player=document.getElementById("player");
+let book=null, page=0, audioCache={};
+
+function refreshStoryTab(){
+  const has=!!state.profile;
+  storyEmpty.classList.toggle("hidden",has);
+  storyStart.classList.toggle("hidden",!has);
+}
+storyBtn.addEventListener("click",async()=>{
+  if(!state.profile) return;
+  const name=document.getElementById("storyName").value.trim();
+  storyBtn.disabled=true; storyBtn.innerHTML='<span class="spin"></span> Writing story…';
+  storyErr.innerHTML=""; storyView.classList.add("hidden");
+  try{
+    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({mode:"story",profile:state.profile,dogName:name})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||"Something went wrong.");
+    book=data; page=0; audioCache={}; renderBook();
+    storyView.classList.remove("hidden");
+  }catch(err){ storyErr.innerHTML='<div class="err">🐾 '+esc(err.message)+'</div>'; }
+  finally{ storyBtn.disabled=false; storyBtn.innerHTML="Create storybook 📖✨"; }
+});
+
+function renderBook(){
+  const pages=book.pages||[];
+  const p=pages[page]||{text:""};
+  const img=state.dataUrl?`<img class="book-img" src="${state.dataUrl}" alt="dog" />`:"";
+  storyView.innerHTML=`
+    ${img}
+    <div class="book-title">${esc(book.title||"A Doggy Tale")}</div>
+    <div class="book-page-text">${esc(p.text)}</div>
+    <audio id="pageAudio" controls preload="none" style="display:none"></audio>
+    <div class="book-nav">
+      <button class="btn ghost small" id="prevPg" ${page===0?"disabled":""}>← Prev</button>
+      <span class="page-count">Page ${page+1} / ${pages.length}</span>
+      <button class="btn small" id="nextPg" ${page>=pages.length-1?"disabled":""}>Next →</button>
+    </div>
+    <button class="btn sec" id="playPg">🔊 Play narration</button>
+    ${book.moral?`<p class="fun" style="text-align:left">🦴 ${esc(book.moral)}</p>`:""}
+    <button class="btn ghost" id="againBtn">✨ New story</button>`;
+  document.getElementById("prevPg").onclick=()=>{ if(page>0){page--;renderBook();} };
+  document.getElementById("nextPg").onclick=()=>{ if(page<pages.length-1){page++;renderBook();} };
+  document.getElementById("playPg").onclick=playPage;
+  document.getElementById("againBtn").onclick=()=>{ storyView.classList.add("hidden"); storyBtn.click(); };
+}
+
+async function playPage(){
+  const btn=document.getElementById("playPg");
+  const text=(book.pages[page]||{}).text||"";
+  const audioEl=document.getElementById("pageAudio");
+  if(audioCache[page]){ audioEl.src=audioCache[page]; audioEl.style.display="block"; audioEl.play(); return; }
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Narrating…';
+  try{
+    const res=await fetch(TTS,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||"Narration unavailable.");
+    const url="data:audio/mpeg;base64,"+data.audio;
+    audioCache[page]=url; audioEl.src=url; audioEl.style.display="block"; audioEl.play();
+  }catch(err){
+    storyErr.innerHTML='<div class="err">🔇 '+esc(err.message)+' (Narration needs an ELEVENLABS_API_KEY on the server. The story text still works!)</div>';
+  }finally{ btn.disabled=false; btn.innerHTML="🔊 Play narration"; }
 }
 </script>
 </body>

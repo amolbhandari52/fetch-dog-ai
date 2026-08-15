@@ -135,7 +135,7 @@ export default async function handler(req, res) {
     }
 
     if (mode === "chat") {
-      const { message, history } = payload;
+      const { message, history, dogContext } = payload;
       if (!message) { res.status(400).json({ error: "No message provided." }); return; }
 
       const contents = (Array.isArray(history) ? history : [])
@@ -145,14 +145,84 @@ export default async function handler(req, res) {
         contents.push({ role: "user", parts: [{ text: String(message) }] });
       }
 
+      // Breed-aware: fold the scanned dog's profile into the system instruction.
+      let system = PERSONA;
+      if (dogContext && dogContext.breed) {
+        system += "\n\nThe user has scanned their dog. Tailor every answer to this specific dog:\n" +
+          `Breed: ${dogContext.breed}. ` +
+          (dogContext.size ? `Size: ${dogContext.size}. ` : "") +
+          (dogContext.energy ? `Energy: ${dogContext.energy}. ` : "") +
+          (dogContext.temperament ? `Temperament: ${dogContext.temperament}. ` : "") +
+          "When advice differs by breed, give the version that fits this breed, and mention the breed by name.";
+      }
+
       const body = {
-        systemInstruction: { parts: [{ text: PERSONA }] },
+        systemInstruction: { parts: [{ text: system }] },
         contents,
         generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
       };
 
       const reply = await callGemini(body, apiKey);
       res.status(200).json({ reply });
+      return;
+    }
+
+    if (mode === "careplan") {
+      const { profile, dogName } = payload;
+      if (!profile || !profile.breed) { res.status(400).json({ error: "Scan a dog first." }); return; }
+
+      const prompt =
+        `Create a personalized care plan for a dog. ${dogName ? `The dog's name is ${dogName}. ` : ""}` +
+        `Breed: ${profile.breed}. Size: ${profile.size || "unknown"}. Energy: ${profile.energy || "unknown"}. ` +
+        `Temperament: ${profile.temperament || "unknown"}. ` +
+        "Respond with ONLY a JSON object, no markdown, in this exact shape: " +
+        "{\"dog_name\": string, \"breed\": string, \"sections\": [" +
+        "{\"title\":\"Feeding\",\"icon\":\"🍖\",\"tips\":[2-3 short specific tips]}," +
+        "{\"title\":\"Grooming\",\"icon\":\"🛁\",\"tips\":[...]}," +
+        "{\"title\":\"Exercise\",\"icon\":\"🎾\",\"tips\":[...]}," +
+        "{\"title\":\"Environment\",\"icon\":\"🏡\",\"tips\":[...]}," +
+        "{\"title\":\"Training\",\"icon\":\"🎓\",\"tips\":[...]}," +
+        "{\"title\":\"Health & Vet\",\"icon\":\"🩺\",\"tips\":[...]}" +
+        "], \"summary\": one encouraging 1-2 sentence wrap-up}. " +
+        "Make tips concrete and specific to this breed's needs.";
+
+      const body = {
+        systemInstruction: { parts: [{ text: PERSONA }] },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.5, responseMimeType: "application/json" },
+      };
+      const text = await callGemini(body, apiKey);
+      let parsed;
+      try { parsed = JSON.parse(text); }
+      catch { const m = text.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : { error: "Could not parse plan." }; }
+      if (dogName && !parsed.dog_name) parsed.dog_name = dogName;
+      if (!parsed.breed) parsed.breed = profile.breed;
+      res.status(200).json(parsed);
+      return;
+    }
+
+    if (mode === "story") {
+      const { profile, dogName } = payload;
+      if (!profile || !profile.breed) { res.status(400).json({ error: "Scan a dog first." }); return; }
+      const hero = dogName || `a brave ${profile.breed}`;
+
+      const prompt =
+        `Write a short, wholesome, heart-warming children's story starring ${hero}, a ${profile.breed}` +
+        (profile.temperament ? ` who is ${profile.temperament}` : "") + ". " +
+        "The story should feel personal and cozy. Respond with ONLY a JSON object, no markdown, in this shape: " +
+        "{\"title\": a short fun title, \"pages\": [exactly 5 pages, each {\"text\": 2-3 warm sentences}], " +
+        "\"moral\": one short uplifting takeaway}. " +
+        "Keep each page short enough to be read aloud in about 15 seconds. Keep it gentle and age-appropriate.";
+
+      const body = {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.9, responseMimeType: "application/json" },
+      };
+      const text = await callGemini(body, apiKey);
+      let parsed;
+      try { parsed = JSON.parse(text); }
+      catch { const m = text.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : { error: "Could not parse story." }; }
+      res.status(200).json(parsed);
       return;
     }
 

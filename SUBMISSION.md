@@ -1,53 +1,62 @@
 ---
-title: "Fetch — an AI dog companion that reads any pup 🐕"
+title: "Fetch — scan your dog, then chat, plan & hear their story 🐕"
 published: false
-tags: devchallenge, weekendchallenge, googleai, webdev
+tags: devchallenge, weekendchallenge, googleai, elevenlabs
 ---
 
 *This is a submission for the [DEV Weekend Challenge: Dog Days Edition](https://dev.to/challenges).*
 
 ## What I Built
 
-**Fetch** is a tiny, fast web app that turns Google's Gemini model into a pocket dog expert. It does two things dog people actually want:
+**Fetch** is an AI dog companion that starts with a single photo and turns it into an entire experience. Scan your dog once, and every part of the app then *knows* your pup:
 
-- **📸 Breed Scanner** — snap or upload a photo of a dog and Fetch tells you the most likely breed, how confident it is, the dog's temperament, size, energy level, a few practical care tips, and a fun fact. If you point it at something that *isn't* a dog, it politely says so. 🐾
-- **💬 Ask Fetch** — a warm, no-nonsense dog-care chat assistant for the everyday questions: *"Is chocolate really that dangerous?"*, *"How much exercise does a puppy need?"*, *"How do I start crate training?"* It's friendly, concise, and it always tells you to call a real vet for anything that sounds like an emergency.
+- **📸 Breed Scanner** — snap or upload a photo and Fetch identifies the most likely breed, confidence, temperament, size, energy, care tips, and a fun fact.
+- **💬 Ask Fetch (breed-aware)** — a friendly dog-care chat that tailors every answer to *your* dog's breed. After a scan it even suggests breed-specific questions — grooming, feeding, exercise, environment, training, health — one tap away.
+- **📋 Care Plan** — one tap generates a personalized care plan (feeding, grooming, exercise, environment, training, health & vet), which you can read as a card, **download as a PDF**, or print.
+- **📖 Storybook** — turns your dog's photo into a short, interactive, **AI-narrated storybook** starring your pup. Flip through the pages and press play to hear it read aloud.
 
-The whole thing is one HTML file plus a single serverless function. No sign-up, no app to install — just open it and go.
+The magic is that it's all *connected*: the dog you scan becomes the hero of the chat, the plan, and the story.
 
 ## Demo
 
 🔗 **Live app:** _<add your Vercel URL here>_
 💻 **Code:** _<add your GitHub repo link here>_
 
-<!-- Drop a screenshot or a short screen recording here.
-     Suggested shots: the breed scanner result card, and a chat exchange. -->
+<!-- Add screenshots / a short screen recording:
+     1) breed scanner result, 2) breed-aware chat, 3) care plan card, 4) storybook page playing narration -->
 
 ## How I Used Google AI
 
-This project leans on **Google Gemini** (`gemini-2.0-flash`) for everything intelligent:
+**Google Gemini** is the brain behind four different jobs, all through one serverless endpoint:
 
-- **Vision breed ID.** The uploaded photo is sent to Gemini as inline image data, and I ask it to return a **strict JSON object** (breed, confidence, temperament, size, energy, care tips, fun fact). Gemini's JSON response mode makes the result reliable to render — no brittle string parsing, no hallucinated markdown.
-- **Guardrailed chat.** A system instruction gives Fetch its personality *and* its safety rails: be practical and friendly, never pretend to be a vet, and escalate anything involving injury or poisoning to a professional immediately. Conversation history is passed back so it remembers the thread.
+- **Vision breed ID** — the photo is sent to Gemini as inline image data; it returns a **strict JSON** breed profile (using Gemini's JSON response mode, so rendering is reliable).
+- **Breed-aware chat** — the scanned profile is folded into the system instruction, so answers are specific to the breed and its needs.
+- **Structured care plans** — Gemini returns a sectioned JSON plan that I render into a card and a PDF.
+- **Story generation** — Gemini writes a short, wholesome 5-page story starring the user's dog by name.
 
-Both features run through **one** serverless endpoint (`/api/gemini`) with a `mode` flag, which keeps the surface area tiny.
+To keep it robust for the challenge window, the function **auto-detects a current Gemini model** from the API instead of hard-coding one — so a model rename can't break the live demo.
+
+## How I Used ElevenLabs
+
+The **Storybook** narration is powered by **ElevenLabs text-to-speech**. Each page's text is sent to a serverless proxy that calls ElevenLabs and streams back MP3 audio, which plays in the browser. The function **auto-selects a narration-friendly voice** available on the account, so it works without manual voice configuration. It's what turns a wall of text into something a kid (or a very good dog) would actually want to sit through.
 
 ## How It's Built
 
 ```
-index.html      → the entire UI (vanilla HTML/CSS/JS, light + dark mode, mobile-first)
-api/gemini.js   → Vercel serverless proxy: identify + chat
+index.html          → the whole UI (scan · chat · care plan · storybook)
+api/gemini.js        → Gemini proxy: identify / chat / careplan / story
+api/elevenlabs.js    → ElevenLabs TTS proxy: narration
 ```
 
-The most important design decision: **the API key never touches the browser.** The frontend talks only to my own `/api/gemini` function, which reads `GEMINI_API_KEY` from a server-side environment variable and forwards the request to Google. That means the live demo is safe to share publicly without leaking credentials — a detail that's easy to skip in a weekend build but matters the moment you deploy.
+The most important design decision: **neither API key ever touches the browser.** The frontend only talks to my own serverless functions, which read the keys from server-side environment variables. That means the live demo is safe to share publicly.
 
-Everything else is deliberately dependency-free: no framework, no bundler, no npm install for the frontend. It loads instantly and works the same on a phone at the dog park as on a laptop.
+Everything else is deliberately lightweight — vanilla HTML/CSS/JS with jsPDF from a CDN, no framework, no bundler. It loads instantly and works the same on a phone at the dog park as on a laptop.
 
 ## What I'd Add Next
 
-- A "care calendar" that turns breed-specific advice into reminders (grooming, vet checks, exercise targets).
+- A care calendar that turns the plan into reminders.
 - Multi-dog detection for group photos.
-- A voice mode so you can ask Fetch hands-free on a walk.
+- Letting users pick the narrator's voice per story.
 
 Thanks for a fun prompt — any excuse to spend a weekend building for dogs. 🐶
 
