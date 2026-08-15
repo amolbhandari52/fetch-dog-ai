@@ -1,0 +1,11 @@
+{
+  "name": "fetch-ai-dog-companion",
+  "version": "1.0.0",
+  "description": "Fetch — an AI dog companion (breed scanner + care chat) powered by Google Gemini. Built for the DEV Dog Days Challenge.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  }
+}

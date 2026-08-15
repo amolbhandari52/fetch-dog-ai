@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fetch — Your AI Dog Companion 🐕</title>
+<meta name="description" content="Point your camera at any pup. Fetch is an AI dog companion powered by Google Gemini: identify breeds and get instant, friendly dog-care advice." />
+<style>
+  :root {
+    --bg: #fdf6ec;
+    --bg-card: #ffffff;
+    --ink: #2b2118;
+    --ink-soft: #6b5d4f;
+    --brand: #e8873a;
+    --brand-deep: #c9631a;
+    --accent: #3a6ea5;
+    --line: #ede2d3;
+    --good: #4c9a5a;
+    --shadow: 0 10px 30px rgba(80, 50, 20, 0.10);
+    --radius: 18px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1712;
+      --bg-card: #272019;
+      --ink: #f3e9dc;
+      --ink-soft: #b7a793;
+      --line: #3a2f24;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    text-align: center;
+    padding: 34px 20px 10px;
+  }
+  .logo {
+    font-size: 2.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .logo span { color: var(--brand); }
+  .tagline { color: var(--ink-soft); margin: 4px 0 0; font-size: 1rem; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px 60px; }
+  .tabs {
+    display: flex; gap: 8px; justify-content: center;
+    margin: 22px 0 18px; flex-wrap: wrap;
+  }
+  .tab {
+    border: 1px solid var(--line); background: var(--bg-card);
+    color: var(--ink-soft); padding: 9px 18px; border-radius: 999px;
+    font-size: .95rem; font-weight: 600; cursor: pointer; transition: .15s;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active {
+    background: var(--brand); border-color: var(--brand);
+    color: #fff; box-shadow: var(--shadow);
+  }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 22px; margin-bottom: 18px;
+  }
+  .hidden { display: none; }
+  /* Scanner */
+  .drop {
+    border: 2px dashed var(--line); border-radius: var(--radius);
+    padding: 30px 18px; text-align: center; cursor: pointer;
+    transition: .15s; background: transparent;
+  }
+  .drop:hover, .drop.drag { border-color: var(--brand); background: rgba(232,135,58,.06); }
+  .drop .big { font-size: 2.4rem; }
+  .drop p { margin: 8px 0 0; color: var(--ink-soft); }
+  .preview {
+    width: 100%; max-height: 340px; object-fit: contain;
+    border-radius: 14px; margin-top: 14px; display: none;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+    background: var(--brand); color: #fff; border: none;
+    padding: 12px 22px; border-radius: 999px; font-size: 1rem;
+    font-weight: 700; cursor: pointer; transition: .15s; width: 100%;
+    margin-top: 14px;
+  }
+  .btn:hover { background: var(--brand-deep); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+  /* Result */
+  .breed-name { font-size: 1.5rem; font-weight: 800; margin: 0; }
+  .conf {
+    display: inline-block; background: rgba(76,154,90,.14); color: var(--good);
+    font-weight: 700; font-size: .82rem; padding: 3px 10px; border-radius: 999px;
+    margin-left: 8px; vertical-align: middle;
+  }
+  .traits { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .chip {
+    background: var(--bg); border: 1px solid var(--line); color: var(--ink-soft);
+    padding: 6px 12px; border-radius: 999px; font-size: .85rem; font-weight: 600;
+  }
+  .chip b { color: var(--ink); }
+  .section-h { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--brand); font-weight: 700; margin: 18px 0 6px; }
+  .care li { margin-bottom: 6px; }
+  .fun { font-style: italic; color: var(--ink-soft); border-left: 3px solid var(--brand);
+    padding-left: 12px; margin-top: 14px; }
+  .alt { color: var(--ink-soft); font-size: .9rem; margin-top: 12px; }
+  /* Chat */
+  .chat-log { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px;
+    max-height: 52vh; overflow-y: auto; padding-right: 4px; }
+  .msg { padding: 11px 15px; border-radius: 16px; max-width: 85%; white-space: pre-wrap; }
+  .msg.user { background: var(--brand); color: #fff; align-self: flex-end; border-bottom-right-radius: 5px; }
+  .msg.bot { background: var(--bg); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 5px; }
+  .msg.bot.think { color: var(--ink-soft); font-style: italic; }
+  .chat-form { display: flex; gap: 8px; }
+  .chat-form input {
+    flex: 1; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--bg-card); color: var(--ink); font-size: 1rem;
+  }
+  .chat-form input:focus { outline: none; border-color: var(--brand); }
+  .chat-form button {
+    background: var(--brand); color: #fff; border: none; border-radius: 999px;
+    width: 48px; font-size: 1.2rem; cursor: pointer;
+  }
+  .suggest { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .suggest button {
+    background: transparent; border: 1px solid var(--line); color: var(--ink-soft);
+    padding: 7px 12px; border-radius: 999px; font-size: .85rem; cursor: pointer;
+  }
+  .suggest button:hover { border-color: var(--brand); color: var(--brand); }
+  .err { background: rgba(201,99,26,.1); border: 1px solid var(--brand); color: var(--brand-deep);
+    padding: 12px 14px; border-radius: 12px; margin-top: 12px; font-size: .92rem; }
+  .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  footer { text-align: center; color: var(--ink-soft); font-size: .82rem; padding: 10px 20px 30px; }
+  footer a { color: var(--brand); text-decoration: none; }
+  .disclaimer { font-size: .78rem; color: var(--ink-soft); text-align: center; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="logo">🐕 Fetch<span>.</span></h1>
+  <p class="tagline">Your AI dog companion — point your camera at any pup.</p>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab active" data-tab="scan">📸 Breed Scanner</button>
+    <button class="tab" data-tab="chat">💬 Ask Fetch</button>
+  </div>
+
+  <!-- SCANNER -->
+  <section id="scan" class="card">
+    <div class="drop" id="drop">
+      <div class="big">🐾</div>
+      <p><b>Tap to upload a dog photo</b><br>or drag &amp; drop it here</p>
+      <input type="file" id="file" accept="image/*" capture="environment" style="display:none" />
+    </div>
+    <img id="preview" class="preview" alt="Your dog" />
+    <button class="btn" id="scanBtn" disabled>Identify this good boy 🔍</button>
+    <div id="scanErr"></div>
+    <div id="result"></div>
+  </section>
+
+  <!-- CHAT -->
+  <section id="chat" class="card hidden">
+    <div class="suggest" id="suggest">
+      <button>Is chocolate really dangerous for dogs?</button>
+      <button>How much exercise does a puppy need?</button>
+      <button>My dog won't stop barking at night</button>
+      <button>Best way to start crate training?</button>
+    </div>
+    <div class="chat-log" id="log">
+      <div class="msg bot">Woof! I'm Fetch 🐕 — ask me anything about dog care, training, breeds, or behaviour. What's on your mind?</div>
+    </div>
+    <form class="chat-form" id="chatForm">
+      <input id="chatInput" type="text" placeholder="Ask about your dog…" autocomplete="off" />
+      <button type="submit" title="Send">➤</button>
+    </form>
+    <p class="disclaimer">Fetch offers general guidance, not veterinary diagnosis. For emergencies, call your vet.</p>
+  </section>
+</div>
+
+<footer>
+  Built with 🧡 for the DEV Dog Days Challenge · Powered by <a href="https://ai.google.dev/" target="_blank" rel="noopener">Google Gemini</a>
+</footer>
+
+<script>
+const API = "/api/gemini";
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    const id = t.dataset.tab;
+    document.getElementById("scan").classList.toggle("hidden", id !== "scan");
+    document.getElementById("chat").classList.toggle("hidden", id !== "chat");
+  });
+});
+
+/* ---------- Scanner ---------- */
+const drop = document.getElementById("drop");
+const fileInput = document.getElementById("file");
+const preview = document.getElementById("preview");
+const scanBtn = document.getElementById("scanBtn");
+const resultEl = document.getElementById("result");
+const scanErr = document.getElementById("scanErr");
+let imageData = null; // base64 (no prefix)
+let mimeType = null;
+
+drop.addEventListener("click", () => fileInput.click());
+["dragover","dragenter"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("drag"); }));
+["dragleave","drop"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("drag"); }));
+drop.addEventListener("drop", ev => { if (ev.dataTransfer.files[0]) handleFile(ev.dataTransfer.files[0]); });
+fileInput.addEventListener("change", () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+function handleFile(file) {
+  if (!file.type.startsWith("image/")) { showScanErr("Please pick an image file."); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    preview.src = dataUrl;
+    preview.style.display = "block";
+    imageData = dataUrl.split(",")[1];
+    mimeType = file.type;
+    scanBtn.disabled = false;
+    resultEl.innerHTML = "";
+    scanErr.innerHTML = "";
+  };
+  reader.readAsDataURL(file);
+}
+
+function showScanErr(m) { scanErr.innerHTML = `<div class="err">${m}</div>`; }
+
+scanBtn.addEventListener("click", async () => {
+  if (!imageData) return;
+  scanBtn.disabled = true;
+  scanBtn.innerHTML = '<span class="spin"></span> Sniffing…';
+  scanErr.innerHTML = "";
+  resultEl.innerHTML = "";
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "identify", imageData, mimeType })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Something went wrong.");
+    renderResult(data);
+  } catch (err) {
+    showScanErr("🐾 " + err.message);
+  } finally {
+    scanBtn.disabled = false;
+    scanBtn.innerHTML = "Identify this good boy 🔍";
+  }
+});
+
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])); }
+
+function renderResult(d) {
+  if (d.is_dog === false) {
+    resultEl.innerHTML = `<div class="err">Hmm, I don't see a dog in that photo 🐶 Try another shot!</div>`;
+    return;
+  }
+  const traits = [];
+  if (d.size) traits.push(`<span class="chip"><b>Size:</b> ${esc(d.size)}</span>`);
+  if (d.energy) traits.push(`<span class="chip"><b>Energy:</b> ${esc(d.energy)}</span>`);
+  if (d.good_with_kids) traits.push(`<span class="chip"><b>Kids:</b> ${esc(d.good_with_kids)}</span>`);
+  if (d.lifespan) traits.push(`<span class="chip"><b>Lifespan:</b> ${esc(d.lifespan)}</span>`);
+  const care = (d.care_tips || []).map(t => `<li>${esc(t)}</li>`).join("");
+  const alts = (d.also_possible && d.also_possible.length)
+    ? `<p class="alt">Also possibly: ${d.also_possible.map(esc).join(", ")}</p>` : "";
+  const conf = d.confidence ? `<span class="conf">${esc(d.confidence)}% match</span>` : "";
+  resultEl.innerHTML = `
+    <div style="margin-top:20px">
+      <h2 class="breed-name">${esc(d.breed || "Mixed breed")} ${conf}</h2>
+      ${d.temperament ? `<p style="margin:6px 0 0;color:var(--ink-soft)">${esc(d.temperament)}</p>` : ""}
+      <div class="traits">${traits.join("")}</div>
+      ${care ? `<div class="section-h">Care tips</div><ul class="care">${care}</ul>` : ""}
+      ${d.fun_fact ? `<p class="fun">🦴 ${esc(d.fun_fact)}</p>` : ""}
+      ${alts}
+    </div>`;
+}
+
+/* ---------- Chat ---------- */
+const log = document.getElementById("log");
+const chatForm = document.getElementById("chatForm");
+const chatInput = document.getElementById("chatInput");
+const history = [];
+
+document.getElementById("suggest").addEventListener("click", e => {
+  if (e.target.tagName === "BUTTON") { chatInput.value = e.target.textContent; sendChat(); }
+});
+chatForm.addEventListener("submit", e => { e.preventDefault(); sendChat(); });
+
+function addMsg(text, who, think) {
+  const div = document.createElement("div");
+  div.className = "msg " + who + (think ? " think" : "");
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+async function sendChat() {
+  const q = chatInput.value.trim();
+  if (!q) return;
+  chatInput.value = "";
+  addMsg(q, "user");
+  history.push({ role: "user", text: q });
+  const thinking = addMsg("Fetch is thinking…", "bot", true);
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "chat", message: q, history: history.slice(-10) })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Something went wrong.");
+    thinking.remove();
+    addMsg(data.reply, "bot");
+    history.push({ role: "model", text: data.reply });
+  } catch (err) {
+    thinking.remove();
+    addMsg("🐾 " + err.message, "bot");
+  }
+}
+</script>
+</body>
+</html>
